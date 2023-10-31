@@ -94,8 +94,6 @@ await PlutonicationWalletClient.InitializeAsync(
         // To be added later...
     });
 
-Console.WriteLine("Connected successfully");
-
 Console.ReadKey();
 
 Console.WriteLine("Bye bye.");
