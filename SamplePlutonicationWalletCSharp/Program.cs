@@ -12,6 +12,15 @@ using Substrate.NetApi.Model.Types.Base;
 Account account = Helpers.GetAccount();
 Console.WriteLine("Public key: " + account.Value);
 
+SubstrateClient substrateClient = new SubstrateClient(
+    new Uri("wss://ws.test.azero.dev"),
+    Substrate.NetApi.Model.Extrinsics.ChargeTransactionPayment.Default());
+
+await substrateClient.ConnectAsync();
+
+Console.WriteLine(String.Format("Balance: {0:0.00}",
+    await Helpers.GetAccountBalance(substrateClient, account.Value)));
+
 await PlutonicationWalletClient.InitializeAsync(
     ac: new AccessCredentials(new Uri("plutonication:?key=1&url=wss://plutonication-acnha.ondigitalocean.app/")),
     pubkey: account.Value,

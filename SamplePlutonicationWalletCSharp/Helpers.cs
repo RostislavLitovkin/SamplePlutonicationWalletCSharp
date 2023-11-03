@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
+using System.Net;
 using Schnorrkel.Keys;
 using Substrate.NetApi;
 using Substrate.NetApi.Model.Types;
+using Substrate.NetApi.Model.Types.Base;
 
 namespace SamplePlutonicationWalletCSharp
 {
@@ -34,6 +36,32 @@ namespace SamplePlutonicationWalletCSharp
             {
                 throw new FormatException("The provided string is not a valid hexadecimal number");
             }
+        }
+
+
+        public static async Task<double> GetAccountBalance(SubstrateClient client, string substrateAddress)
+        {
+            
+            var account32 = new AccountId32();
+            account32.Create(Utils.GetPublicKeyFrom(substrateAddress));
+
+            string parameters = AccountParams(account32);
+            var accountInfo = await client.GetStorageAsync<AccountInfo>(parameters, CancellationToken.None);
+
+            int decimals = 12;
+
+            return (double)accountInfo.Data.Free.Value / Math.Pow(10, decimals);
+        }
+
+        /// <summary>
+        /// >> AccountParams
+        ///  The full account information for a particular account ID.
+        /// </summary>
+        private static string AccountParams(AccountId32 key)
+        {
+            return RequestGenerator.GetStorage("System", "Account", Substrate.NetApi.Model.Meta.Storage.Type.Map, new Substrate.NetApi.Model.Meta.Storage.Hasher[] {
+                        Substrate.NetApi.Model.Meta.Storage.Hasher.BlakeTwo128Concat}, new Substrate.NetApi.Model.Types.IType[] {
+                        key});
         }
     }
 }
