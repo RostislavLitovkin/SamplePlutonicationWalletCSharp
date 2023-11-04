@@ -88,7 +88,7 @@ await PlutonicationWalletClient.InitializeAsync(
 
             Console.WriteLine("Nearly done");
 
-            PlutonicationWalletClient.SendSignedPayloadAsync(signerResult);
+            PlutonicationWalletClient.SendPayloadSignatureAsync(signerResult);
             Console.WriteLine("PAYLOAD sent");
         }
         catch (Exception ex)
