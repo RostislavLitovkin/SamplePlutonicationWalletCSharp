@@ -1,8 +1,10 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Chaos.NaCl;
 using Newtonsoft.Json;
 using Plutonication;
 using SamplePlutonicationWalletCSharp;
+using Schnorrkel;
 using Substrate.NetApi;
 using Substrate.NetApi.Model.Extrinsics;
 using Substrate.NetApi.Model.Rpc;
@@ -80,7 +82,7 @@ await PlutonicationWalletClient.InitializeAsync(
 
             var signerResult = new SignerResult
             {
-                id = 10000,
+                id = 1,
                 signature = Utils.Bytes2HexString(extrinsic.Signature).ToLower(),
             };
 
@@ -88,8 +90,9 @@ await PlutonicationWalletClient.InitializeAsync(
 
             Console.WriteLine("Nearly done");
 
+            
             PlutonicationWalletClient.SendPayloadSignatureAsync(signerResult);
-            Console.WriteLine("PAYLOAD sent");
+            Console.WriteLine("Signature is on the way...");
         }
         catch (Exception ex)
         {
@@ -100,7 +103,39 @@ await PlutonicationWalletClient.InitializeAsync(
     },
     signRaw: raw =>
     {
-        // To be added later...
+        Plutonication.Message message = JsonConvert.DeserializeObject<Plutonication.Message[]>(raw.ToString())[0];
+
+        if (message.type != "bytes")
+        {
+            throw new Exception("Message is not in bytes format");
+        }
+        byte[] msg = Utils.HexToByteArray(message.data);
+
+        if (msg.Length > 256) msg = HashExtension.Blake2(msg, 256);
+
+        byte[] signature;
+        switch (account.KeyType)
+        {
+            case KeyType.Ed25519:
+                signature = Ed25519.Sign(msg, account.PrivateKey);
+                break;
+
+            case KeyType.Sr25519:
+                signature = Sr25519v091.SignSimple(account.Bytes, account.PrivateKey, msg);
+                break;
+
+            default:
+                throw new Exception($"Unknown key type found '{account.KeyType}'.");
+        }
+
+        var signerResult = new SignerResult
+        {
+            id = 1,
+            signature = Utils.Bytes2HexString(signature).ToLower(),
+        };
+
+        PlutonicationWalletClient.SendRawSignatureAsync(signerResult);
+        Console.WriteLine("Signature is on the way...");
     });
 
 Console.ReadKey();
