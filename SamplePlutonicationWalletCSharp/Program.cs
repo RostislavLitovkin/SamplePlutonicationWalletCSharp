@@ -68,13 +68,17 @@ await PlutonicationWalletClient.InitializeAsync(
                 TransactionVersion = Helpers.HexStringToUint(payload.transactionVersion),
             };
 
+            ChargeType charge = payload.signedExtensions.Contains("ChargeAssetTxPayment") ?
+                new ChargeAssetTxPayment(Helpers.HexStringToUint(payload.tip), 0) :
+                new ChargeTransactionPayment(Helpers.HexStringToUint(payload.tip));
+
             var extrinsic = RequestGenerator.SubmitExtrinsic(
                 true,
                 account,
                 method,
                 Era.Decode(Utils.HexToByteArray(payload.era)),
                 Helpers.HexStringToUint(payload.nonce),
-                ChargeAssetTxPayment.Default(),
+                charge,
                 genesisHash,
                 blockHash,
                 runtime
@@ -83,14 +87,13 @@ await PlutonicationWalletClient.InitializeAsync(
             var signerResult = new SignerResult
             {
                 id = 1,
-                signature = Utils.Bytes2HexString(extrinsic.Signature).ToLower(),
+                signature = Utils.Bytes2HexString(new byte[1] { 1 }.Concat(extrinsic.Signature).ToArray()).ToLower(),
             };
 
-            Console.WriteLine("Signature: " + Utils.Bytes2HexString(extrinsic.Signature).ToLower());
+            Console.WriteLine("Signature: " + Utils.Bytes2HexString(new byte[1] { 1 }.Concat(extrinsic.Signature).ToArray()).ToLower());
 
             Console.WriteLine("Nearly done");
 
-            
             PlutonicationWalletClient.SendPayloadSignatureAsync(signerResult);
             Console.WriteLine("Signature is on the way...");
         }
